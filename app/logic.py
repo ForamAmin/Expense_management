@@ -1,54 +1,89 @@
-# app/logic.py
+from models import Expense, ExpenseApproval, User
+from schemas import ExpenseCreate
+from SQLAlchemy import Session
+from _datetime import datetime
+from app.constants import PENDING, APPROVED, REJECTED, ADMIN
 
-from app.models import User, Expense
-from app.constants import PENDING
-
-# --------------------
-# AUTH
-# --------------------
-def authenticate_user(db, email, password):
-    return db.query(User).filter(User.email == email).first()
-
-
-# --------------------
-# EXPENSES
-# --------------------
-def create_expense(db, user_id, payload):
-    expense = Expense(
-        employee_id=user_id,
-        amount=payload.amount,
-        currency=payload.currency,
-        category=payload.category,
-        description=payload.description,
-        date=payload.date,
-        status=PENDING
-    )
-    db.add(expense)
+def create_expense(db: Session, data: ExpenseCreate):
+    expense_instance = Expense(**data.model_dump())
+    db.add(expense_instance)
     db.commit()
-    db.refresh(expense)
-    return expense
+    db.refresh(expense_instance)
+    return expense_instance
 
+def get_pending_approvals(db : Session, user_id : int):
+    pending_result = db.query(ExpenseApproval).filter(
+        ExpenseApproval.approver_id == user_id,
+        ExpenseApproval.status == PENDING
+    )
 
-def get_user_expenses(db, user_id):
-    return db.query(Expense).filter(Expense.employee_id == user_id).all()
+def process_approval(
+    db: Session,
+    approval_id: int,
+    user_id: int,
+    decision: str,
+    comment: str | None
+):
+    approval = db.query(ExpenseApproval).get(approval_id)
+    if not approval:
+        raise Exception("Approval task not found")
 
+    if approval.approver_id != user_id:
+        raise Exception("You are not allowed to approve this task")
 
-def get_expense_details(db, expense_id):
-    return {
-        "id": expense_id,
-        "approvals": []
-    }
+    approval.status = decision
+    approval.comment = comment
+    approval.approved_at = datetime.utcnow()
 
+    expense = approval.expense
 
-# --------------------
-# APPROVALS
-# --------------------
-def get_pending_approvals(db, user_id):
-    return []
+    if decision == REJECTED:
+        expense.status = REJECTED
+        db.commit()
+        return expense
 
+    if approval.level == 1:
+        admin = (
+            db.query(User)
+            .filter(
+                User.company_id == expense.employee.company_id,
+                User.role == ADMIN
+            )
+            .first()
+        )
 
-def process_approval(db, approval_id, user_id, decision, comment=None):
-    return {
-        "status": "success",
-        "new_expense_status": "APPROVED"
+        new_task = ExpenseApproval(
+            expense_id=expense.id,
+            approver_id=admin.id,
+            level=2,
+            status=PENDING
+        )
+
+        db.add(new_task)
+        db.commit()
+        return expense
+
+    # Final level approved
+    if approval.level == 2:
+        expense.status = APPROVED
+        db.commit()
+        return expense
+
+def get_user_expenses(db: Session, user_id: int):
+    return (
+        db.query(Expense)
+        .filter(Expense.employee_id == user_id)
+        .order_by(Expense.date.desc())
+        .all()
+    )
+
+def get_expense_details(db:Session, expense_id:int):
+    expense_data = db.query(Expense).filter(Expense.id==expense_id).first()
+    if not expense_data:
+        raise Exception("Expense not found")
+    approvals = expense_data.approvals
+
+    return{
+        "expense" : expense_data,
+        "approvals": approvals
     }
