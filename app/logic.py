@@ -1,6 +1,6 @@
-from models import Expense, ExpenseApproval, User
-from schemas import ExpenseCreate
-from sqlalchemy import Session
+from app.models import Expense, ExpenseApproval, User
+from app.schemas import ExpenseCreate
+from sqlalchemy.orm import Session
 from datetime import datetime
 from app.constants import PENDING, APPROVED, REJECTED, ADMIN
 from passlib.context import CryptContext
