@@ -1,0 +1,33 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "PostgreSQL",
+            "connectString": "postgresql://expense_qwbu_user:Ns2vlHqnrXQo1tnyCLhjExB8uF4gNefU@dpg-d56np72li9vc73fmmsc0-a.singapore-postgres.render.com/expense_qwbu",
+            "name": "Render DB "
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "PostgreSQL",
+            "connectString": "postgresql://expense_qwbu_user:Ns2vlHqnrXQo1tnyCLhjExB8uF4gNefU@dpg-d56np72li9vc73fmmsc0-a.singapore-postgres.render.com/expense_qwbu",
+            "name": "expense_qwbu"
+        },
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "PostgreSQL",
+            "name": "expense_qwbu_final",
+            "connectString": "postgresql://expense_qwbu_user:Ns2vlHqnrXQo1tnyCLhjExB8uF4gNefU@dpg-d56np72li9vc73fmmsc0-a.singapore-postgres.render.com/expense_qwbu"
+        }
+    ]
+}
