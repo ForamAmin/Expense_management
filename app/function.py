@@ -68,3 +68,22 @@ def process_approval(
         expense.status = APPROVED
         db.commit()
         return expense
+
+def get_user_expenses(db: Session, user_id: int):
+    return (
+        db.query(Expense)
+        .filter(Expense.employee_id == user_id)
+        .order_by(Expense.date.desc())
+        .all()
+    )
+
+def get_expense_details(db:Session, expense_id:int):
+    expense_data = db.query(Expense).filter(Expense.id==expense_id).first()
+    if not expense_data:
+        raise Exception("Expense not found")
+    approvals = expense_data.approvals
+
+    return{
+        "expense" : expense_data,
+        "approvals": approvals
+    }
