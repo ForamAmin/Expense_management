@@ -43,12 +43,12 @@ class LoginRequest(BaseModel):
     password: str
 
 #This is what backend sends when responding to a login request.
-#backend saying "“On successful login, I will send user_id, role, and company_id.”"
+#backend saying "“On successful login, I will send user_id, role, and company_id and jwt_token.”"
 class LoginResponse(BaseModel):
     user_id: int
     role: str
     company_id: int
-
+    access_token: str
 #Expense Schema
 
 #This is what frontend must send when creating an expense.
@@ -104,8 +104,6 @@ class ExpenseApprovalResponse(BaseModel):
     approved_at: Optional[datetime]
     level: int
 
-    class Config:
-        orm_mode = True
 
 #Pending approvals Schema
 #this is what backend sends when responding with pending approvals for a manager
