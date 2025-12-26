@@ -1,8 +1,9 @@
 from models import Expense, ExpenseApproval, User
 from schemas import ExpenseCreate
-from SQLAlchemy import Session
-from _datetime import datetime
+from sqlalchemy import Session
+from datetime import datetime
 from app.constants import PENDING, APPROVED, REJECTED, ADMIN
+from passlib.context import CryptContext
 
 def create_expense(db: Session, data: ExpenseCreate):
     expense_instance = Expense(**data.model_dump())
@@ -87,3 +88,29 @@ def get_expense_details(db:Session, expense_id:int):
         "expense" : expense_data,
         "approvals": approvals
     }
+
+
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def authenticate_user(db: Session, email: str, password: str):
+    """
+    Fetch user by email,
+    verify password,
+    return user if valid else None.
+    """
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        return None
+
+    if not verify_password(password, user.password):
+        return None
+
+    return user
